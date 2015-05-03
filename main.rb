@@ -5,8 +5,8 @@ require 'JSON'
 class Main
   def run
     Trello.configure do |config|
-      config.developer_public_key =  "XXXX" # The "key" from step 1
-      config.member_token =  "XXXX"
+      config.developer_public_key =  "" # The "key" from step 1
+      config.member_token =  ""
       # The token from step 3.
     end
 
@@ -26,16 +26,28 @@ class Main
 
     puts("Data gotten, slamming it into Orchestrate")
 
-    app = Orchestrate::Application.new("XXXX", "https://api.ctl-uc1-a.orchestrate.io/")
+    app = Orchestrate::Application.new("", "https://api.ctl-uc1-a.orchestrate.io/")
     trello_data = app[:TrelloData]
+
     trello_data.set(board_dict[:id], board_dict)
+
     cards_dict.each { |c|
       card_id = c[:id]
-      puts("adding card data for #{c[:name]}")
+      puts("adding card data for #{c[:id]}:#{c[:name]}")
       trello_data.set(c[:id], c)
+    }
 
-      action_events = trello_data["ActionEvents"]
-      card_actions.each{ |a| action_events.events["event_data_" + card_id] << a}
+    card_actions.each_pair { |action_key, action_value|
+      card_obj = trello_data[action_key]
+
+      action_value.each { |action_data|
+        puts("adding card actions to #{action_data[:card_id]}:#{action_data[:id]}")
+        trello_date = action_data[:date]
+        ruby_date = DateTime.parse(trello_date.to_s)
+        iso_8601_date = ruby_date.iso8601
+
+        card_obj.events[:card_actions][iso_8601_date] << action_data
+      }
     }
 
     puts("Data be slammed")
@@ -55,15 +67,17 @@ class Main
   end
 
   def get_card_action_data cards
+    card_actions = {}
     cards.each { |c|
-      actions = get_card_actions(c.actions)
+      card_actions[c.id] = get_card_actions(c.actions, c.id)
     }
+    card_actions
   end
 
-  def get_card_actions actions
+  def get_card_actions actions, card_id
     actions.sort{|a1, a2| a1.date <=> a2.date}.collect { |a|
       {
-          :id => a.id, :type => a.type, :data => a.data, :date => a.date
+          :id => a.id, :type => a.type, :card_id => card_id, :data => a.data, :date => a.date
       }
     }
   end
