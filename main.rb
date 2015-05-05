@@ -5,8 +5,8 @@ require 'JSON'
 class Main
   def run
     Trello.configure do |config|
-      config.developer_public_key =  "" # The "key" from step 1
-      config.member_token =  ""
+      config.developer_public_key =  ENV[TRELLO_DEV_KEY] # The "key" from step 1
+      config.member_token =  ENV[TRELLO_TOKEN]
       # The token from step 3.
     end
 
@@ -26,7 +26,7 @@ class Main
 
     puts("Data gotten, slamming it into Orchestrate")
 
-    app = Orchestrate::Application.new("", "https://api.ctl-uc1-a.orchestrate.io/")
+    app = Orchestrate::Application.new(ENV[ORCHESTRATE_API_KEY], "https://api.ctl-uc1-a.orchestrate.io/")
     trello_data = app[:TrelloData]
 
     trello_data.set(board_dict[:id], board_dict)

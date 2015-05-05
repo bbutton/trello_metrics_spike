@@ -1,4 +1,6 @@
 *.log
 .idea/
 Gemfile.lock
+config_data.txt
+
 
