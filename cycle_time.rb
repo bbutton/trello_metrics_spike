@@ -3,45 +3,41 @@ require 'JSON'
 
 class CycleTimeGenerator
   def run
-    app = Orchestrate::Application.new(ENV[ORCHESTRATE_API_KEY], "https://api.ctl-uc1-a.orchestrate.io/")
+    app = Orchestrate::Application.new(ENV["ORCHESTRATE_API_KEY"], "https://api.ctl-uc1-a.orchestrate.io/")
     trello_data = app[:TrelloData]
 
-    workingActions = trello_data.search('listAfter.name:Working AND date:[2015-04-01 TO 2015-04-30]').order(:card_id, :asc, :date, :desc, ).kinds('event').find
-    completeActions = trello_data.search('listAfter.name:Complete AND date:[2015-04-01 TO 2015-04-30]').order(:card_id, :asc, :date, :asc, ).kinds('event').find
+    complete_actions = trello_data.search('listAfter.name:(Complete or Completed) AND date:[2015-04-01 TO 2015-04-31]').order(:card_id, :asc, :date, :asc, ).kinds('event').find
 
-    working_stuff = workingActions.collect { |score, event| event}
-    complete_stuff = completeActions.collect { |score, event| event}
+    results = []
+    complete_actions.each do |score, complete_action|
+      card_id = complete_action[:card_id]
+      card_name = complete_action["data"]["card"]["name"]
+      complete_date = complete_action["date"]
 
-    working = to_hash(working_stuff)
-    complete = to_hash(complete_stuff)
-    puts "working actions count is #{working.keys.length}"
-    puts "complete actions count is #{complete.keys.length}"
+      working_actions = trello_data.search('(listAfter.name:"Working" OR listBefore.name:"Ready for Work") AND card_id:' + card_id).order(:card_id, :asc, :date, :asc, ).kinds('event').find
 
-    puts "working elements: "
-    working.each_key { |key| puts working[key].value }
-
-    puts
-    puts "complete elements: "
-    complete.each_key { |key| puts complete[key].value }
-
-
-
-    working.each_key do |key|
-      start_date = working[key][:date]
-      if complete.has_key? key then
-        end_date = complete[key][:date] unless complete.has_key?(key)
-
-        puts "#{key} start: #{start_date} - #{end_date}"
+      start_date = nil
+      working_actions.each do |ignore, working_action|
+        start_date = working_action["date"]
       end
+
+      if(start_date != nil) then
+        sd = DateTime.parse(start_date)
+        ed = DateTime.parse(complete_date)
+
+        cycle_time = week_days_between(sd, ed)
+
+        results << {card_name: card_name, sd: sd, ed: ed, cycle_time: cycle_time}
+      end
+
     end
+    results
 
-    # puts "********** Working"
-    # workingActions_no_score.each { |event| puts "#{event.value}" }
-    #
-    # puts
-    # puts "********** Complete"
-    # completeActions.each{ |score, event| puts "#{event.value}"}
+  end
 
+  def week_days_between start_date, end_date
+    r = Range.new(start_date, end_date)
+    r.select{|day| (day.saturday? || day.sunday?) == false}.size
   end
 
   def to_hash my_array
@@ -49,8 +45,16 @@ class CycleTimeGenerator
     my_array.each{ |element| hash[element[:card_id]] = element}
     hash
   end
+
+  def print_report results
+    puts "Name\tstart_date\tend_date\tcycle_time"
+    results.each do |result|
+      puts "#{result[:card_name]}\t#{result[:sd]}\t#{result[:ed]}\t#{result[:cycle_time]}"
+    end
+  end
 end
 
 ctg = CycleTimeGenerator.new
-ctg.run
+results = ctg.run
+ctg.print_report(results)
 
