@@ -5,13 +5,12 @@ require 'JSON'
 class Main
   def run
     Trello.configure do |config|
-      config.developer_public_key =  ENV[TRELLO_DEV_KEY] # The "key" from step 1
-      config.member_token =  ENV[TRELLO_TOKEN]
-      # The token from step 3.
+      config.developer_public_key =  ENV["TRELLO_DEV_KEY"] # The "key" from step 1
+      config.member_token =  ENV["TRELLO_TOKEN"]
     end
 
     boards = Trello::Board.all
-    object_storage_board = boards.select { |b| b.name == "Object Storage"}[0]
+    feature_team_boards = boards.select { |b| b.name.starts_with? "Feature Team:"}[0]
     lists = object_storage_board.lists.select { |l| l.closed == false}
     cards = object_storage_board.cards.select { |c| c.closed == false}
 
