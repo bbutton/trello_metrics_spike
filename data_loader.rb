@@ -2,17 +2,32 @@ require 'orchestrate'
 require 'trello'
 require 'JSON'
 
-class Main
-  def run
+class DataLoader
+  def initialize(trello_dev_key, trello_token, orchestrate_api_key, orchestrate_endpoint, orchestrate_collection)
+    @trello_dev_key = trello_dev_key
+    @trello_token = trello_token
+    @orchestrate_api_key = orchestrate_api_key
+    @orchestrate_endpoint = orchestrate_endpoint
+    @orchestrate_collection = orchestrate_collection
+  end
+
+  def load
     Trello.configure do |config|
-      config.developer_public_key =  ENV["TRELLO_DEV_KEY"] # The "key" from step 1
-      config.member_token =  ENV["TRELLO_TOKEN"]
+      config.developer_public_key =  @trello_dev_key # The "key" from step 1
+      config.member_token =  @trello_token
     end
 
+    if ARGV.count == 0 then
+      puts "Please provide the board name"
+      return
+    end
+
+    puts "Adding data for board #{ARGV[0]}"
+
     boards = Trello::Board.all
-    feature_team_boards = boards.select { |b| b.name.starts_with? "Feature Team:"}[0]
+    object_storage_board = boards.select { |b| b.name.start_with? ARGV[0]}[0]
     lists = object_storage_board.lists.select { |l| l.closed == false}
-    cards = object_storage_board.cards.select { |c| c.closed == false}
+    cards = object_storage_board.cards #.select { |c| c.closed == false}
 
     board_dict = {:id => object_storage_board.id,
               :trello_type => "board",
@@ -25,15 +40,15 @@ class Main
 
     puts("Data gotten, slamming it into Orchestrate")
 
-    app = Orchestrate::Application.new(ENV[ORCHESTRATE_API_KEY], "https://api.ctl-uc1-a.orchestrate.io/")
-    trello_data = app[:TrelloData]
+    app = Orchestrate::Application.new(@orchestrate_api_key, @orchestrate_endpoint)
+    trello_data = app[@orchestrate_collection]
 
     trello_data.set(board_dict[:id], board_dict)
 
     cards_dict.each { |c|
       card_id = c[:id]
-      puts("adding card data for #{c[:id]}:#{c[:name]}")
-      trello_data.set(c[:id], c)
+      puts("adding card data for #{card_id}:#{c[:name]}")
+      trello_data.set(card_id, c)
     }
 
     card_actions.each_pair { |action_key, action_value|
@@ -82,5 +97,5 @@ class Main
   end
 end
 
-us = Main.new
-us.run
+us = DataLoader.new(ENV["TRELLO_DEV_KEY"], ENV["TRELLO_TOKEN"], ENV["ORCHESTRATE_API_KEY"], ENV["ORCHESTRATE_ENDPOINT"], ENV["ORCHESTRATE_COLLECTION"])
+us.load
