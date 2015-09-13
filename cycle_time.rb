@@ -6,11 +6,12 @@ class CycleTimeGenerator
     app = Orchestrate::Application.new(ENV["ORCHESTRATE_API_KEY"], ENV["ORCHESTRATE_ENDPOINT"])
     trello_data = app[:TrelloData]
 
+    board_id = '53fb794a72ab28b254f3f471'
     #complete_actions = trello_data.search('listAfter.name:(Complete or Completed) AND date:[2015-06-01 TO 2015-08-01]').order(:card_id, :asc, :date, :asc, ).kinds('event').find
-    complete_actions = trello_data.search('board.id:5526c40a2009a802149b7e28 AND listAfter.name:(Complete or Completed)').order(:card_id, :asc, :date, :asc, ).kinds('event').find
-    puts "data"
-    complete_actions.each{ |action| puts action.to_s }
-    puts
+    complete_actions = trello_data.search("board.id:#{board_id} AND listAfter.name:(Complete or Completed)").order(:card_id, :asc, :date, :asc, ).kinds('event').find
+    #puts "data"
+    #complete_actions.each{ |action| puts action.to_s }
+    #puts
 
     results = []
     complete_actions.each do |score, complete_action|
@@ -65,8 +66,8 @@ class CycleTimeGenerator
   def print_report results
     puts "Name\tstart_date\tend_date\tcycle_time"
     results.each do |result|
-      #puts "#{result[:card_name]}\t#{date_to_ymd(result[:sd])}\t#{date_to_ymd(result[:ed])}\t#{result[:cycle_time]}"
-      puts "#{date_to_ymd(result[:ed])}\t#{date_to_ymd(result[:sd])}\t\t\t{#result[:card_name]}"
+      puts "#{result[:card_name]}\t#{date_to_ymd(result[:sd])}\t#{date_to_ymd(result[:ed])}\t#{result[:cycle_time]}"
+      #puts "#{date_to_ymd(result[:ed])}\t#{date_to_ymd(result[:sd])}\t\t\t#{result[:card_name]}"
     end
   end
 end
