@@ -27,12 +27,14 @@ class DataLoader
     boards = Trello::Board.all
     object_storage_board = boards.select { |b| b.name.start_with? ARGV[0]}[0]
     lists = object_storage_board.lists.select { |l| l.closed == false}
+    labels = object_storage_board.labels
     cards = object_storage_board.cards #.select { |c| c.closed == false}
 
     board_dict = {:id => object_storage_board.id,
               :trello_type => "board",
               :name => object_storage_board.name,
               :sorted_lists => get_list_data(lists),
+              :labels => labels
     }
 
     cards_dict = get_card_data cards
@@ -80,6 +82,7 @@ class DataLoader
     }
   end
 
+  # events added through the trello_callback need to include all the data specified in get_card_actions!
   def get_card_action_data cards
     card_actions = {}
     cards.each { |c|
