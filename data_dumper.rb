@@ -19,6 +19,9 @@ class DataDumper
         when "createCard"
           puts
           puts "#{card_id}: #{card_date} -> created #{action["data"]["card"]["name"]} "
+        when "copyCard"
+          puts
+          puts "#{card_id}: #{card_date} -> copied #{action["data"]["card"]["name"]} "
         when "updateCard"
           if action["data"]["listAfter"] != nil then
             puts "\t#{card_id}: #{card_date} -> moved from #{action["data"]["listBefore"]["name"]} to #{action["data"]["listAfter"]["name"]} "
@@ -26,7 +29,8 @@ class DataDumper
               puts
             end
           end
-
+        when "addLabelToCard"
+          puts "\t#{card_id}: #{card_date} -> added label #{action["data"]["label"]["name"]}"
       end
     end
   end
