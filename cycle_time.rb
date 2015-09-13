@@ -2,11 +2,11 @@ require 'orchestrate'
 require 'JSON'
 
 class CycleTimeGenerator
-  def run
+  def run board_id
     app = Orchestrate::Application.new(ENV["ORCHESTRATE_API_KEY"], ENV["ORCHESTRATE_ENDPOINT"])
     trello_data = app[:TrelloData]
 
-    board_id = '53fb794a72ab28b254f3f471'
+    #board_id = '53fb794a72ab28b254f3f471'
     #complete_actions = trello_data.search('listAfter.name:(Complete or Completed) AND date:[2015-06-01 TO 2015-08-01]').order(:card_id, :asc, :date, :asc, ).kinds('event').find
     complete_actions = trello_data.search("board.id:#{board_id} AND listAfter.name:(Complete or Completed)").order(:card_id, :asc, :date, :asc, ).kinds('event').find
     #puts "data"
@@ -73,6 +73,6 @@ class CycleTimeGenerator
 end
 
 ctg = CycleTimeGenerator.new
-results = ctg.run
+results = ctg.run(ARGV[0])
 ctg.print_report(results)
 
