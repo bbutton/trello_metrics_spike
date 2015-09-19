@@ -8,7 +8,7 @@ class CycleTimeGenerator
 
     #board_id = '53fb794a72ab28b254f3f471'
     #complete_actions = trello_data.search('listAfter.name:(Complete or Completed) AND date:[2015-06-01 TO 2015-08-01]').order(:card_id, :asc, :date, :asc, ).kinds('event').find
-    complete_actions = trello_data.search("board.id:#{board_id} AND listAfter.name:(Complete or Completed)").order(:card_id, :asc, :date, :asc, ).kinds('event').find
+    complete_actions = trello_data.search("board.id:#{board_id} AND listAfter.name:(`Complete` or `Completed`)").order(:card_id, :asc, :date, :asc, ).kinds('event').find
     #puts "data"
     #complete_actions.each{ |action| puts action.to_s }
     #puts
@@ -25,7 +25,7 @@ class CycleTimeGenerator
         card_name = complete_action["data"]["card"]["name"]
         complete_date = complete_action["date"]
 
-        working_actions = trello_data.search('(listAfter.name:"Working" AND listBefore.name:"Ready for Work") AND card_id:' + card_id).order(:card_id, :asc, :date, :asc, ).kinds('event').find
+        working_actions = trello_data.search('(listAfter.name:`Working` AND listBefore.name:`Ready for Work`) AND card_id:' + card_id).order(:card_id, :asc, :date, :asc, ).kinds('event').find
         #puts "Dumping raw data"
         #working_actions.each { |action| puts action.to_s }
 
