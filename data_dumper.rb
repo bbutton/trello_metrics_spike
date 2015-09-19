@@ -31,6 +31,8 @@ class DataDumper
           end
         when "addLabelToCard"
           puts "\t#{card_id}: #{card_date} -> added label #{action["data"]["label"]["name"]}"
+        when "moveCardToBoard"
+          puts "\t#{card_id}: #{card_date} -> moved to this board from #{action["data"]["board_source"]["name"]}"
       end
     end
   end
