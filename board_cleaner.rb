@@ -15,19 +15,24 @@ class BoardCleaner
       offset += 100
     end until results.count == 0
 
+    puts "Found #{complete_results.count()} results"
+
     action_ids = []
     complete_results.each do |action|
       action_ids << {key: action["path"]["key"], type: "card_actions", timestamp: action["path"]["timestamp"], ordinal: action["path"]["ordinal"]}
     end
     action_ids.uniq!
 
+    puts "Translates to #{action_ids.count()} unique ids to delete"
+
     counter = 0
     action_ids.each do |a|
-      puts "purging: TrelloData:#{a[:key]}:#{a[:type]}:#{a[:timestamp]}:#{a[:ordinal]}"
       @client.purge_event("TrelloData", a[:key], a[:type], a[:timestamp], a[:ordinal])
       counter += 1
-      puts "#{counter}"
+      puts "#{counter}" if counter % 50 == 1
     end
+
+    puts "Complete. All events deleted"
   end
 
   def do_search board_id, offset
@@ -44,4 +49,5 @@ class BoardCleaner
 end
 
 board_cleaner = BoardCleaner.new
+puts "running event cleanup for board id: #{ARGV[0]}"
 board_cleaner.run ARGV[0]
